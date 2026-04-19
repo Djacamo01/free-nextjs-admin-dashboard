@@ -3,28 +3,32 @@ import React, { useState } from "react";
 
 interface SwitchProps {
   label: string;
+  /** Modo controlado: si se define, el estado lo controla el padre. */
+  checked?: boolean;
   defaultChecked?: boolean;
   disabled?: boolean;
   onChange?: (checked: boolean) => void;
-  color?: "blue" | "gray"; // Added prop to toggle color theme
+  color?: "blue" | "gray";
 }
 
 const Switch: React.FC<SwitchProps> = ({
   label,
+  checked: checkedProp,
   defaultChecked = false,
   disabled = false,
   onChange,
-  color = "blue", // Default to blue color
+  color = "blue",
 }) => {
-  const [isChecked, setIsChecked] = useState(defaultChecked);
+  const [internalChecked, setInternalChecked] = useState(defaultChecked);
+  const controlled = checkedProp !== undefined;
+  const isChecked = controlled ? checkedProp : internalChecked;
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (disabled) return;
-    const newCheckedState = !isChecked;
-    setIsChecked(newCheckedState);
-    if (onChange) {
-      onChange(newCheckedState);
-    }
+    const next = !isChecked;
+    if (!controlled) setInternalChecked(next);
+    onChange?.(next);
   };
 
   const switchColors =
@@ -32,40 +36,48 @@ const Switch: React.FC<SwitchProps> = ({
       ? {
           background: isChecked
             ? "bg-brand-500 "
-            : "bg-gray-200 dark:bg-white/10", // Blue version
+            : "bg-gray-200 dark:bg-white/10",
           knob: isChecked
-            ? "translate-x-full bg-white"
+            ? "translate-x-[1.375rem] bg-white"
             : "translate-x-0 bg-white",
         }
       : {
           background: isChecked
             ? "bg-gray-800 dark:bg-white/10"
-            : "bg-gray-200 dark:bg-white/10", // Gray version
+            : "bg-gray-200 dark:bg-white/10",
           knob: isChecked
-            ? "translate-x-full bg-white"
+            ? "translate-x-[1.375rem] bg-white"
             : "translate-x-0 bg-white",
         };
 
   return (
     <label
       className={`flex cursor-pointer select-none items-center gap-3 text-sm font-medium ${
-        disabled ? "text-gray-400" : "text-gray-700 dark:text-gray-400"
+        disabled
+          ? "cursor-not-allowed text-gray-400"
+          : "text-gray-700 dark:text-gray-400"
       }`}
-      onClick={handleToggle} // Toggle when the label itself is clicked
     >
-      <div className="relative">
-        <div
-          className={`block transition duration-150 ease-linear h-6 w-11 rounded-full ${
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isChecked}
+        disabled={disabled}
+        onClick={handleToggle}
+        className="relative shrink-0 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 rounded-full"
+      >
+        <span
+          className={`block h-6 w-11 rounded-full transition-colors duration-150 ease-linear ${
             disabled
-              ? "bg-gray-100 pointer-events-none dark:bg-gray-800"
+              ? "bg-gray-100 dark:bg-gray-800"
               : switchColors.background
           }`}
-        ></div>
-        <div
-          className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full shadow-theme-sm duration-150 ease-linear transform ${switchColors.knob}`}
-        ></div>
-      </div>
-      {label}
+        />
+        <span
+          className={`pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full shadow-theme-sm transition duration-150 ease-linear ${switchColors.knob}`}
+        />
+      </button>
+      <span onClick={disabled ? undefined : handleToggle}>{label}</span>
     </label>
   );
 };

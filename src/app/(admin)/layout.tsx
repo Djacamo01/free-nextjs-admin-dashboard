@@ -1,5 +1,6 @@
 "use client";
 
+import ConditionalFloatingChat from "@/components/chat/ConditionalFloatingChat";
 import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
@@ -34,6 +35,7 @@ export default function AdminLayout({
         {/* Page Content */}
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
       </div>
+      <ConditionalFloatingChat />
     </div>
   );
 }

@@ -38,18 +38,33 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  /* Ordely brand — deep violet */
+  --color-brand-25: #faf5ff;
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #7c3aed;
+  --color-brand-600: #6d28d9;
+  --color-brand-700: #5b21b6;
+  --color-brand-800: #4c1d95;
+  --color-brand-900: #2e1065;
+  --color-brand-950: #1a0a40;
+
+  /* Teal — AI / chat accent */
+  --color-teal-25: #f0fdfa;
+  --color-teal-50: #ccfbf1;
+  --color-teal-100: #99f6e4;
+  --color-teal-200: #5eead4;
+  --color-teal-300: #2dd4bf;
+  --color-teal-400: #14b8a6;
+  --color-teal-500: #0d9488;
+  --color-teal-600: #0f766e;
+  --color-teal-700: #115e59;
+  --color-teal-800: #134e4a;
+  --color-teal-900: #134e4a;
+  --color-teal-950: #042f2e;
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -148,7 +163,7 @@
     0px 20px 24px -4px rgba(16, 24, 40, 0.08),
     0px 8px 8px -4px rgba(16, 24, 40, 0.03);
   --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
-  --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(124, 58, 237, 0.14);
   --shadow-slider-navigation:
     0px 1px 2px 0px rgba(16, 24, 40, 0.1), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
   --shadow-tooltip:
@@ -583,7 +598,14 @@ span.flatpickr-weekday,
   @apply rounded-lg py-2.5 pl-4 pr-3;
 }
 .event-fc-color .fc-event-title {
-  @apply p-0 text-sm font-normal text-gray-700;
+  @apply p-0 text-sm font-normal text-gray-800;
+}
+/* Texto explícito en bloques custom (timeGrid usa divs, no solo .fc-event-title) */
+.custom-calendar .event-fc-color {
+  @apply text-gray-900;
+}
+.custom-calendar .event-fc-color .fc-event-time {
+  @apply text-gray-800;
 }
 .fc-daygrid-event-dot {
   @apply w-1 h-5 ml-0 mr-3 border-none rounded-sm;
@@ -618,6 +640,37 @@ span.flatpickr-weekday,
 .event-fc-color.fc-bg-warning .fc-daygrid-event-dot {
   @apply bg-orange-500;
 }
+
+/* Modo oscuro: fondos más profundos + texto claro (evita blanco sobre mint/brand-50) */
+.dark .custom-calendar .event-fc-color.fc-bg-success {
+  @apply border-success-600/45 bg-success-800/50 text-white;
+}
+.dark .custom-calendar .event-fc-color.fc-bg-danger {
+  @apply border-error-600/45 bg-error-800/50 text-white;
+}
+.dark .custom-calendar .event-fc-color.fc-bg-primary {
+  @apply border-brand-500/50 bg-brand-700/55 text-white;
+}
+.dark .custom-calendar .event-fc-color.fc-bg-warning {
+  @apply border-amber-600/45 bg-amber-800/50 text-white;
+}
+.dark .custom-calendar .event-fc-color .fc-event-title,
+.dark .custom-calendar .event-fc-color .fc-event-time {
+  @apply text-white;
+}
+.dark .custom-calendar .event-fc-color {
+  @apply text-white;
+}
+/* FullCalendar a veces fuerza color en hijos; unificar legibilidad en timeGrid */
+.dark .custom-calendar .fc-timegrid-event .event-fc-color,
+.dark .custom-calendar .fc-timegrid-event .event-fc-color * {
+  color: rgb(255 255 255);
+}
+.dark .custom-calendar .fc-daygrid-event .event-fc-color,
+.dark .custom-calendar .fc-daygrid-event .event-fc-color * {
+  color: rgb(255 255 255);
+}
+
 .fc-direction-ltr .fc-timegrid-slot-label-frame {
   @apply px-3 py-1.5 text-left text-sm font-medium text-gray-500 dark:text-gray-400;
 }
@@ -627,10 +680,25 @@ span.flatpickr-weekday,
 .custom-calendar .fc-h-event {
   background-color: transparent;
   border: none;
-  color: black;
+  @apply text-gray-900;
+}
+.dark .custom-calendar .fc-h-event {
+  /* El color lo define .event-fc-color (texto blanco sobre fondo oscuro) */
+  color: inherit;
+}
+.custom-calendar .fc-timegrid-event {
+  @apply text-gray-900;
+}
+.dark .custom-calendar .fc-timegrid-event {
+  color: inherit;
 }
 .fc.fc-media-screen {
   @apply min-h-screen;
+}
+
+/* FullCalendar embebido en dashboard: min-h-screen rompe timeGrid (semana/día). */
+.custom-calendar .fc.fc-media-screen {
+  min-height: 0 !important;
 }
 
 .input-date-icon::-webkit-inner-spin-button,
@@ -749,4 +817,29 @@ span.flatpickr-weekday,
     0 1px 2px 0 rgba(16, 24, 40, 0.06);
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
+}
+
+/* Chat: indicador “escribiendo…” (Pregunta a Ordely) */
+@keyframes ordely-chat-typing-dot {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  35% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.ordely-chat-typing-dot {
+  animation: ordely-chat-typing-dot 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ordely-chat-typing-dot {
+    animation: none;
+    opacity: 0.55;
+  }
 }

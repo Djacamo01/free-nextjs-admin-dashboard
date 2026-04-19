@@ -1,19 +1,18 @@
-import Calendar from "@/components/calendar/Calendar";
+import CitasTabContent from "@/components/appointments/CitasTabContent";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Calender | TailAdmin - Next.js Dashboard Template",
-  description:
-    "This is Next.js Calender page for TailAdmin  Tailwind CSS Admin Dashboard Template",
-  // other metadata
+  title: "Citas | Ordely",
+  description: "Calendario y lista de citas",
 };
-export default function page() {
+
+export default function CalendarPage() {
   return (
     <div>
-      <PageBreadcrumb pageTitle="Calendar" />
-      <Calendar />
+      <PageBreadcrumb pageTitle="Citas" className="mb-3" />
+      <CitasTabContent />
     </div>
   );
 }

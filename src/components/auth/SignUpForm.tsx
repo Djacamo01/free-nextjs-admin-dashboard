@@ -1,14 +1,63 @@
 "use client";
+import { register, AuthHttpError } from "@/api";
+import { getAccessToken } from "@/api/token-storage";
+import { setAuthRouteCookieFromToken } from "@/lib/auth-route-cookie";
+import { safePostLoginPath } from "@/lib/safePostLoginPath";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
+import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function SignUpForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const access = getAccessToken();
+    if (!access) return;
+    setAuthRouteCookieFromToken(access);
+    router.replace(safePostLoginPath(searchParams.get("from")));
+  }, [router, searchParams]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSubmitError(null);
+    if (!isChecked) {
+      setSubmitError("Debes aceptar los términos para continuar.");
+      return;
+    }
+    const fd = new FormData(e.currentTarget);
+    const firstName = String(fd.get("fname") ?? "").trim();
+    const lastName = String(fd.get("lname") ?? "").trim();
+    const email = String(fd.get("email") ?? "").trim();
+    const password = String(fd.get("password") ?? "");
+    if (!firstName || !lastName || !email || !password) {
+      setSubmitError("Completa todos los campos obligatorios.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await register({ firstName, lastName, email, password }, true);
+      router.push(safePostLoginPath(searchParams.get("from")));
+    } catch (err) {
+      const message =
+        err instanceof AuthHttpError
+          ? err.message
+          : "No se pudo crear la cuenta. Inténtalo de nuevo.";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -83,8 +132,16 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-5">
+                {submitError && (
+                  <p
+                    className="text-sm text-error-500 dark:text-error-400"
+                    role="alert"
+                  >
+                    {submitError}
+                  </p>
+                )}
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
                   <div className="sm:col-span-1">
@@ -96,6 +153,7 @@ export default function SignUpForm() {
                       id="fname"
                       name="fname"
                       placeholder="Enter your first name"
+                      disabled={isSubmitting}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -108,6 +166,7 @@ export default function SignUpForm() {
                       id="lname"
                       name="lname"
                       placeholder="Enter your last name"
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -121,6 +180,7 @@ export default function SignUpForm() {
                     id="email"
                     name="email"
                     placeholder="Enter your email"
+                    disabled={isSubmitting}
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -130,8 +190,10 @@ export default function SignUpForm() {
                   </Label>
                   <div className="relative">
                     <Input
+                      name="password"
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      disabled={isSubmitting}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -151,6 +213,7 @@ export default function SignUpForm() {
                     className="w-5 h-5"
                     checked={isChecked}
                     onChange={setIsChecked}
+                    disabled={isSubmitting}
                   />
                   <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
                     By creating an account means you agree to the{" "}
@@ -165,9 +228,14 @@ export default function SignUpForm() {
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
-                  </button>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    size="sm"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Creando cuenta…" : "Sign Up"}
+                  </Button>
                 </div>
               </div>
             </form>

@@ -83,21 +83,13 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
-            <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
-              alt="Logo"
-            />
+          <Link href="/" className="flex items-center gap-2 lg:hidden">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500 text-xs font-bold text-white">
+              O
+            </span>
+            <span className="text-base font-bold tracking-tight text-gray-900 dark:text-white">
+              Ordely
+            </span>
           </Link>
 
           <button

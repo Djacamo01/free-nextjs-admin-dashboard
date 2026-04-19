@@ -1,15 +1,62 @@
 "use client";
+import { login, AuthHttpError } from "@/api";
+import { getAccessToken } from "@/api/token-storage";
+import { getTenantSlugFromBrowserHostname } from "@/lib/tenantSlugFromHost";
+import { setAuthRouteCookieFromToken } from "@/lib/auth-route-cookie";
+import { safePostLoginPath } from "@/lib/safePostLoginPath";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function SignInForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const access = getAccessToken();
+    if (!access) return;
+    setAuthRouteCookieFromToken(access);
+    router.replace(safePostLoginPath(searchParams.get("from")));
+  }, [router, searchParams]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSubmitError(null);
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
+    const password = String(fd.get("password") ?? "");
+    if (!email || !password) {
+      setSubmitError("Introduce email y contraseña.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const tenantSlug =
+        typeof window !== "undefined"
+          ? getTenantSlugFromBrowserHostname(window.location.hostname)
+          : undefined;
+      await login({ email, password, tenantSlug }, isChecked);
+      router.push(safePostLoginPath(searchParams.get("from")));
+    } catch (err) {
+      const message =
+        err instanceof AuthHttpError
+          ? err.message
+          : "No se pudo iniciar sesión. Inténtalo de nuevo.";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -84,13 +131,27 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
+                {submitError && (
+                  <p
+                    className="text-sm text-error-500 dark:text-error-400"
+                    role="alert"
+                  >
+                    {submitError}
+                  </p>
+                )}
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Input
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="info@gmail.com"
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label>
@@ -98,8 +159,11 @@ export default function SignInForm() {
                   </Label>
                   <div className="relative">
                     <Input
+                      name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
                       placeholder="Enter your password"
+                      disabled={isSubmitting}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -128,8 +192,13 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    size="sm"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Signing in…" : "Sign in"}
                   </Button>
                 </div>
               </div>
